@@ -196,26 +196,26 @@ body {
 }
 
 .excessive {
-  background-color: rgba(255, 99, 132, 0.9);
-  box-shadow: 0 0 8px rgba(255, 99, 132, 0.5);
+  background-color: rgba(255, 136, 154, 0.5);
+  box-shadow: 0 0 8px rgba(255, 136, 154, 0.5);
 }
 
 .high {
-  background-color: rgba(255, 159, 64, 0.9);
-  box-shadow: 0 0 8px rgba(255, 159, 64, 0.5);
+  background-color: rgba(255, 240, 152, 0.5);
+  box-shadow: 0 0 8px rgba(255, 240, 152, 0.5);
 }
 
 .moderate {
-  background-color: rgba(255, 205, 86, 0.9);
-  box-shadow: 0 0 8px rgba(255, 205, 86, 0.5);
+  background-color: rgba(144, 238, 144, 0.5);
+  box-shadow: 0 0 8px rgba(144, 238, 144, 0.5);
 }
 
 .efficient {
-  background-color: rgba(75, 192, 192, 0.9);
-  box-shadow: 0 0 8px rgba(75, 192, 192, 0.5);
+  background-color: rgba(255, 240, 152, 0.5);
+  box-shadow: 0 0 8px rgba(255, 240, 152, 0.5);
 }
 
 .economy {
-  background-color: rgba(134, 229, 134, 0.9);
-  box-shadow: 0 0 8px rgba(134, 229, 134, 0.5);
+  background-color: rgba(255, 136, 154, 0.5);
+  box-shadow: 0 0 8px rgba(255, 136, 154, 0.5);
 }
