@@ -1,256 +1,281 @@
 import React from 'react';
 import {
   Chart as ChartJS,
-  LineElement,
-  PointElement,
-  LinearScale,
   CategoryScale,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  LineElement,
-  PointElement,
   LinearScale,
-  CategoryScale,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
   Filler,
-  annotationPlugin
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
 );
 
-interface Props {
-  labels: string[];
-  consumo: number[];
-  mediaMovel: number[];
-  bandaSuperior1: number[]; // Consumo Excessivo
-  bandaSuperior2: number[]; // Consumo Elevado
-  bandaSuperior3: number[]; // Consumo Moderado
-  bandaInferior1: number[]; // Uso Eficiente
-  bandaInferior2: number[]; // Economia Máxima
+interface BollingerChartProps {
+  data: Array<{
+    Data: string;
+    Consumo: number;
+    'Média Móvel': number;
+    'Banda Sup 3': number;
+    'Banda Sup 2': number;
+    'Banda Sup 1': number;
+    'Banda Inf 1': number;
+    'Banda Inf 2': number;
+    'Banda Inf 3': number;
+  }>;
 }
 
-export const BollingerChart: React.FC<Props> = ({
-  labels,
-  consumo,
-  mediaMovel,
-  bandaSuperior1,
-  bandaSuperior2,
-  bandaSuperior3,
-  bandaInferior1,
-  bandaInferior2
-}) => {
-  const outliersExcessivos = consumo.map((val, i) =>
-    val > bandaSuperior1[i] ? val : null
+export const BollingerChart: React.FC<BollingerChartProps> = ({ data }) => {
+  // Preparar os dados para o gráfico
+  const labels = data.map(item => {
+  const [year, month, day] = item.Data.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // mês começa do zero!
+  return date.toLocaleDateString('pt-BR', { month: '2-digit', day: '2-digit' });
+});
+
+  const consumo = data.map(item => item.Consumo);
+  const mediaMovel = data.map(item => item['Média Móvel']);
+  const bandaSup3 = data.map(item => item['Banda Sup 3']);
+  const bandaSup2 = data.map(item => item['Banda Sup 2']);
+  const bandaSup1 = data.map(item => item['Banda Sup 1']);
+  const bandaInf1 = data.map(item => item['Banda Inf 1']);
+  const bandaInf2 = data.map(item => item['Banda Inf 2']);
+  const bandaInf3 = data.map(item => item['Banda Inf 3']);
+
+  // Identificar pontos especiais baseados na classificação
+  const pontosBaixoNormal = data.map((item) => 
+    item.Consumo < item['Banda Inf 1'] ? item.Consumo : null
   );
-  
-  const outliersEconomia = consumo.map((val, i) =>
-    val < bandaInferior2[i] ? val : null
-  );  const data = {
+  const pontosAcimaNormal = data.map((item) => 
+    item.Consumo > item['Banda Sup 1'] ? item.Consumo : null
+  );
+
+  const chartData = {
     labels,
     datasets: [
-      // Área de Consumo Excessivo (acima da banda superior 1)
+      // Linha superior (Banda Sup 3) - só para definir o limite superior
       {
-        label: 'Consumo Excessivo',
-        data: bandaSuperior1,
-        borderColor: 'rgba(255, 99, 132, 0.3)',
-        backgroundColor: 'rgba(255, 99, 132, 0.3)',
-        fill: '+1',
-        pointRadius: 0,
-        borderDash: [5, 5],
-      },
-      // Área de Consumo Elevado (entre bandas superior 1 e 2)
-      {
-        label: 'Consumo Elevado',
-        data: bandaSuperior2,
-        borderColor: 'rgba(255, 159, 64, 0.3)',
-        backgroundColor: 'rgba(255, 159, 64, 0.3)',
-        fill: '+1',
-        pointRadius: 0,
-        borderDash: [5, 5],
-      },
-      // Área de Consumo Moderado (entre bandas superior 2 e 3)
-      {
-        label: 'Consumo Moderado',
-        data: bandaSuperior3,
-        borderColor: 'rgba(255, 205, 86, 0.3)',
-        backgroundColor: 'rgba(255, 205, 86, 0.3)',
-        fill: '+1',
-        pointRadius: 0,
-        borderDash: [5, 5],
-      },
-      // Área de Uso Eficiente (entre média móvel e banda inferior 1)
-      {
-        label: 'Uso Eficiente',
-        data: bandaInferior1,
-        borderColor: 'rgba(75, 192, 192, 0.3)',
-        backgroundColor: 'rgba(75, 192, 192, 0.3)',
-        fill: '+1',
-        pointRadius: 0,
-        borderDash: [5, 5],
-      },
-      // Área de Economia Máxima (abaixo da banda inferior 2)
-      {
-        label: 'Economia Máxima',
-        data: bandaInferior2,
-        borderColor: 'rgba(134, 229, 134, 0.3)',
-        backgroundColor: 'rgba(134, 229, 134, 0.3)',
+        label: '',
+        data: bandaSup3,
+        borderColor: 'transparent',
+        backgroundColor: 'transparent',
         fill: false,
+        tension: 0.1,
         pointRadius: 0,
-        borderDash: [5, 5],
-      },      // Linha de Consumo
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Banda Muito Alto (preenchimento até a linha anterior)
+      {
+        label: 'Muito alto',
+        data: bandaSup2,
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(255, 182, 193, 0.5)',
+        fill: '-1',
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Banda Alto
+      {
+        label: 'Alto',
+        data: bandaSup1,
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(255, 218, 185, 0.5)',
+        fill: '-1',
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Banda Normal (área entre Banda Inf 1 e Banda Sup 1)
+      {
+        label: 'Normal',
+        data: bandaInf1,
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(144, 238, 144, 0.5)',
+        fill: '-1',
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Banda Baixo
+      {
+        label: 'Baixo',
+        data: bandaInf2,
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(255, 255, 224, 0.5)',
+        fill: '-1',
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Banda Muito Baixo
+      {
+        label: 'Muito baixo',
+        data: bandaInf3,
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(255, 182, 193, 0.5)',
+        fill: '-1',
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 0,
+      },
+      // Linha da média móvel
+      {
+        label: 'Média Móvel (30d)',
+        data: mediaMovel,
+        borderColor: 'rgba(255, 165, 0, 0.5)',
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+      },
+      // Linha do consumo
       {
         label: 'Consumo',
         data: consumo,
-        borderColor: 'rgb(54, 162, 235)',
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderWidth: 2,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'transparent',
         fill: false,
-        tension: 0.3,
+        tension: 0.1,
         pointRadius: 3,
-        pointHoverRadius: 5,
-        zIndex: 10,
-      },
-      // Média móvel
-      {
-        label: 'Média Móvel (7d)',
-        data: mediaMovel,
-        borderColor: 'rgb(255, 159, 64)',
-        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+        pointHoverRadius: 6,
         borderWidth: 2,
-        fill: false,
-        tension: 0.3,
-        pointRadius: 0,
-        zIndex: 9,
       },
-      // Outliers - Consumo Excessivo
+      // Pontos especiais - Abaixo do Normal
       {
-        label: 'Excessivo',
-        data: outliersExcessivos,
-        backgroundColor: 'rgba(255, 99, 132, 0.8)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        pointStyle: 'circle',
+        label: 'Abaixo do Normal',
+        data: pontosBaixoNormal,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 1)',
+        fill: false,
+        tension: 0.1,
         pointRadius: 6,
         pointHoverRadius: 8,
+        borderWidth: 0,
         showLine: false,
-        fill: false,
-        zIndex: 11,
       },
-      // Outliers - Economia Máxima
+      // Pontos especiais - Acima do normal
       {
-        label: 'Economia Máxima',
-        data: outliersEconomia,
-        backgroundColor: 'rgba(0, 0, 255, 0.8)',
-        borderColor: 'rgba(0, 0, 255, 1)',
-        pointStyle: 'circle',
+        label: 'Acima do Normal',
+        data: pontosAcimaNormal,
+        borderColor: 'rgb(253, 38, 84, 1)',
+        backgroundColor: 'rgba(253, 38, 84, 1)',
+        fill: false,
+        tension: 0.1,
         pointRadius: 6,
         pointHoverRadius: 8,
+        borderWidth: 0,
         showLine: false,
-        fill: false,
-        zIndex: 11,
-      }
-    ]
-  };  const options = {
+      },
+    ],
+  };
+
+  const options = {
     responsive: true,
     maintainAspectRatio: false,
-    layout: {
-      padding: {
-        left: 10,
-        right: 30,
-        top: 20,
-        bottom: 10
-      }
-    },    plugins: {
+    plugins: {
       legend: {
-        display: false, // Escondendo a legenda já que temos nossa própria legenda customizada
-      },      title: {
-        display: false, // Escondemos o título já que temos um no card
-      },      tooltip: {
-        enabled: true,
+        position: 'top' as const,
+        labels: {
+          boxWidth: 12,
+          padding: 20,
+          font: {
+            size: 11,
+          },
+          filter: function(legendItem: any) {
+            // Ocultar datasets auxiliares vazios
+            return legendItem.text !== '';
+          },
+        },
+      },
+      title: {
+        display: true,
+        text: 'Gráfico de classificação de consumo com bandas de Bollinger',
+        font: {
+          size: 16,
+        },
+      },
+      tooltip: {
         mode: 'index' as const,
         intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        titleColor: 'white', // Garantindo cor clara para o título em fundo escuro
-        bodyColor: 'white', // Garantindo cor clara para o conteúdo em fundo escuro
-        titleFont: {
-          size: 13
-        },
-        bodyFont: {
-          size: 12
-        },
-        padding: 10,
         callbacks: {
           label: function(context: any) {
-            let label = context.dataset.label || '';
-            if (label) {
-              label += ': ';
+            const label = context.dataset.label || '';
+            if (label === 'Consumo' || label === 'Média Móvel (30d)') {
+              return `${label}: ${context.parsed.y.toFixed(2)}`;
             }
-            if (context.parsed.y !== null) {
-              label += context.parsed.y.toFixed(2);
-            }
-            return label;
-          }
-        }
-      }
+            return undefined;
+          },
+        },
+        filter: function(tooltipItem: any) {
+          return tooltipItem.dataset.label === 'Consumo' || 
+                 tooltipItem.dataset.label === 'Média Móvel (30d)' ||
+                 tooltipItem.dataset.label === 'Abaixo do Normal' ||
+                 tooltipItem.dataset.label === 'Desperdício';
+        },
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          text: 'Data',
+        },
+        grid: {
+          display: true,
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: 'Consumo',
+        },
+        grid: {
+          display: true,
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        min: -250,
+        max: 550,
+      },
     },
     interaction: {
       mode: 'nearest' as const,
       axis: 'x' as const,
-      intersect: false
-    },    scales: {      x: {
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)'
-        },        ticks: {
-          autoSkip: true,
-          maxRotation: 45,
-          minRotation: 45,
-          maxTicksLimit: 10,
-          font: {
-            size: 10
-          },
-          color: '#333' // Escurecendo mais a cor do texto para melhorar o contraste
-        },        title: {
-          display: true,
-          text: 'Data',
-          color: '#333', // Escurecendo mais a cor do texto para melhorar o contraste
-          font: {
-            size: 12
-          }
-        }
-      },      y: {
-        beginAtZero: false,
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)'
-        },        ticks: {
-          callback: function(value: any) {
-            return value.toLocaleString();
-          },
-          font: {
-            size: 10
-          },
-          color: '#333' // Escurecendo mais a cor do texto para melhorar o contraste
-        },        title: {
-          display: true,
-          text: 'Consumo',
-          color: '#333', // Escurecendo mais a cor do texto para melhorar o contraste
-          font: {
-            size: 12
-          }
-        }
-      }
-    }
+      intersect: false,
+    },
+    elements: {
+      line: {
+        tension: 0.1,
+      },
+    },
   };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <Line data={data} options={options} />
+    <div style={{ width: '100%', height: '500px' }}>
+      <Line data={chartData} options={options} />
     </div>
   );
 };
