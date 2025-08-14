@@ -257,7 +257,7 @@ export const BollingerChart: React.FC<BollingerChartProps> = ({ data }) => {
           display: true,
           color: 'rgba(0, 0, 0, 0.1)',
         },
-        min: -250,
+        min: 0,
         max: 550,
       },
     },
